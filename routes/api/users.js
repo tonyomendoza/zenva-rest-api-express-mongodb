@@ -73,4 +73,21 @@ router.get('/:id', auth, (req,res) => {
     });
 });
 
+router.patch('/', auth, (req, res) => {
+    const { password } = req.body;
+
+    if(!password){
+        return res.status(400).send({err: 'name and type are required'});
+    }
+
+    const currentUser = req.user;
+    currentUser.password = password;
+    currentUser.save(function(err){
+        if(err)
+            return res.status(400).send({err});
+        
+        return res.status(204).send();
+    })
+});
+
 export default router;
