@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 import mongoose from '../database/mongodb';
 import bcrypt from 'bcrypt';
+import _ from 'lodash';
 
 const userSchema = new Schema({
     username: { type:String, required: true, index: {unique:true }},
@@ -33,6 +34,10 @@ userSchema.methods.comparePassword = function(password, next) {
         return next(null, isMatch);
     });
 }
+
+userSchema.methods.removePassword = function() {
+    return _.omit(this.toObject(), 'password');
+};
 
 const User = mongoose.model('user', userSchema);
 

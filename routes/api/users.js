@@ -6,12 +6,13 @@ import jwt from 'jsonwebtoken';
 import { secret, auth } from '../../config/passport';
 
 router.get('/', auth, (req, res) =>{
-    User.find({}, function(err, users){
-        if(err){
-            return res.status(500).send({err});
-        }
-        return res.send(users);
-    })
+    User.find({}).select('-password').exec(
+        function(err, users){
+            if(err){
+                return res.status(500).send({err});
+            }
+            return res.send(users);
+        });
 });
 
 router.post('/token', (req, res) =>{
@@ -56,7 +57,7 @@ router.post('/', (req, res) => {
         if(err){
             return res.status(400).send({err});
         }
-        return res.status(201).send(model);
+        return res.status(201).send(model.removePassword());
     });
 });
 
@@ -66,7 +67,7 @@ router.get('/current', auth, (req, res) => {
 
 router.get('/:id', auth, (req,res) => {
     const {id} = req.params;
-    User.findById(id, function(err, userModel) {
+    User.findById(id).select('-password').exec(function(err, userModel) {
         if(err)
             return res.status(400).send({err})
         return res.send(userModel);
