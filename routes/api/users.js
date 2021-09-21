@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { restart } from 'nodemon';
 import User from '../../models/User';
 const router = Router();
+import jwt from 'jsonwebtoken';
+import { secret, auth } from '../../config/passport';
 
-router.get('/', (req, res) =>{
+router.get('/', auth, (req, res) =>{
     User.find({}, function(err, users){
         if(err){
             return res.status(500).send({err});
@@ -12,7 +14,7 @@ router.get('/', (req, res) =>{
     })
 });
 
-router.post('/password', (req, res) =>{
+router.post('/token', (req, res) =>{
     const {username, password } = req.body;
     if(!username || !password){
         return res.send({ err: `Required Fields not found: ${!username ? 'username' : ''}${!password ? 'password':''}`
@@ -28,7 +30,14 @@ router.post('/password', (req, res) =>{
         return userModel.comparePassword(password, function(err, isMatch){
             if(err)
                 return res.status(400).send(err);
-            return res.send({correct: isMatch});
+
+            if(!isMatch){
+                return res.status(400).send({err: 'invalid password'});
+            }
+
+            const payload = { id: userModel._id };
+            const token = jwt.sign(payload, secret);
+            return res.send(token);
         })
     });
 });
@@ -49,6 +58,10 @@ router.post('/', (req, res) => {
         }
         return res.status(201).send(model);
     });
-})
+});
+
+router.get('/current', auth, (req, res) => {
+    return res.send(req.user);
+});
 
 export default router;
