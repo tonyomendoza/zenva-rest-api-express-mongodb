@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { restart } from 'nodemon';
 import User from '../../models/User';
 const router = Router();
 
@@ -11,17 +12,40 @@ router.get('/', (req, res) =>{
     })
 });
 
+router.post('/password', (req, res) =>{
+    const {username, password } = req.body;
+    if(!username || !password){
+        return res.send({ err: `Required Fields not found: ${!username ? 'username' : ''}${!password ? 'password':''}`
+        });
+    }
+    User.findOne({username: username}, function(err, userModel){
+        if(err)
+            return res.status(400).send(err);
+
+        if(!userModel)
+            return res.status(400).send({err: 'Cannot find user'});
+
+        return userModel.comparePassword(password, function(err, isMatch){
+            if(err)
+                return res.status(400).send(err);
+            return res.send({correct: isMatch});
+        })
+    });
+});
+
 router.post('/', (req, res) => {
-    const {username} = req.body;
-    if(!username){
-        return res.send({err: 'Required Fields not found: username'});
+    const {username, password } = req.body;
+    if(!username || !password){
+        return res.send({ err: `Required Fields not found: ${!username ? 'username' : ''}${!password ? 'password':''}`
+        });
     }
     const newUser = new User({
-        username: username
+        username: username,
+        password: password
     });
     newUser.save(function(err, model){
         if(err){
-            return res.status(400).send({err: err});
+            return res.status(400).send({err});
         }
         return res.status(201).send(model);
     });
