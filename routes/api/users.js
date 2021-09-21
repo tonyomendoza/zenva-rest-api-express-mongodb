@@ -64,4 +64,13 @@ router.get('/current', auth, (req, res) => {
     return res.send(req.user);
 });
 
+router.get('/:id', auth, (req,res) => {
+    const {id} = req.params;
+    User.findById(id, function(err, userModel) {
+        if(err)
+            return res.status(400).send({err})
+        return res.send(userModel);
+    });
+});
+
 export default router;
